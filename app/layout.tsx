@@ -8,7 +8,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "5d6 The Daily Roll",
+  title: "The Daily Roll",
   description: "Roll once, server decides.",
 };
 
