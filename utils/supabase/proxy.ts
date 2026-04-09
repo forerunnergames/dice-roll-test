@@ -28,10 +28,29 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // Refresh the session token if needed.
-  // TODO: Use the returned user to redirect unauthenticated requests
-  // to /login once the login page exists.
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Redirect unauthenticated users to /login.
+  if (
+    !user &&
+    !request.nextUrl.pathname.startsWith("/login") &&
+    !request.nextUrl.pathname.startsWith("/auth")
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    const redirectResponse = NextResponse.redirect(url);
+
+    // Carry over any cookie mutations (e.g., clearing expired tokens) that
+    // Supabase applied during getUser(). Without this, stale auth cookies
+    // survive the redirect and can cause redirect loops.
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie);
+    });
+
+    return redirectResponse;
+  }
 
   return supabaseResponse;
 }
