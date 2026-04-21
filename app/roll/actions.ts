@@ -4,6 +4,8 @@
 // that runs on the server but can be called directly from a Client Component
 // (e.g., a button's onClick handler or a form action). React handles the
 // network request behind the scenes; the caller doesn't need to write a fetch.
+//
+// Called from components/roll/roll-button.tsx when the user clicks "Roll the Dice".
 "use server";
 
 import { revalidatePath } from "next/cache";

@@ -4,7 +4,12 @@ import { createAdminClient } from "@/utils/supabase/admin";
 import { maskEmail } from "@/lib/dice";
 import type { Pot, Roll } from "@/types/database";
 
-// Fetch today's pot (public data, any user can read via RLS).
+// Fetch today's pot, creating it if it doesn't exist.
+// There should always be a pot for today — users shouldn't see "---" just
+// because the cron hasn't run yet. The cron's upsert is a backup, not the
+// only way pots get created.
+// Uses the admin client for the upsert (pots have no INSERT RLS policy —
+// only service_role can write), then re-reads via the server client (RLS read).
 export async function getTodaysPot(): Promise<Pot | null> {
   const today = new Date().toISOString().split("T")[0];
   const supabase = await createClient();
@@ -20,7 +25,32 @@ export async function getTodaysPot(): Promise<Pot | null> {
     return null;
   }
 
-  return data;
+  // Pot exists — return it.
+  if (data) return data;
+
+  // No pot for today — create one via admin client, then re-read.
+  const admin = createAdminClient();
+  const { error: upsertError } = await admin
+    .from("pots")
+    .upsert({ date: today }, { onConflict: "date", ignoreDuplicates: true });
+
+  if (upsertError) {
+    console.error("Failed to create today's pot:", upsertError);
+    return null;
+  }
+
+  // Re-read through the server client so the return type matches RLS context.
+  const { data: newPot, error: refetchError } = await supabase
+    .from("pots")
+    .select()
+    .eq("date", today)
+    .maybeSingle();
+
+  if (refetchError) {
+    console.error("Failed to re-fetch today's pot:", refetchError);
+  }
+
+  return newPot;
 }
 
 // Fetch the authenticated user's roll for today (scoped by RLS).
