@@ -25,16 +25,23 @@ export async function login(
   // Never derive this from request headers — the Origin header can be spoofed,
   // which would let an attacker send magic links pointing to their own domain.
   //
-  // VERCEL_PROJECT_PRODUCTION_URL — the production domain (e.g., "dice-roll-test-one.vercel.app")
-  // VERCEL_URL — the current deployment URL (changes per preview deploy)
-  // Both are provided by Vercel's System Environment Variables (no NEXT_PUBLIC_ prefix needed
-  // since this is a Server Action). They don't include the protocol, so we prepend https://.
-  // Falls back to localhost for local dev.
-  const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000";
+  // Precedence:
+  // 1. SITE_URL — explicit override, set in Vercel dashboard (must include protocol)
+  // 2. VERCEL_PROJECT_PRODUCTION_URL — Vercel system var (production domain, no protocol)
+  // 3. VERCEL_URL — Vercel system var (current deployment URL, no protocol)
+  // 4. localhost fallback for local dev
+  const siteUrl = process.env.SITE_URL
+    || (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : "http://localhost:3000");
+
+  // Catch misconfigured SITE_URL (e.g., missing protocol) before sending to Supabase.
+  if (!siteUrl.startsWith("http://") && !siteUrl.startsWith("https://")) {
+    console.error("SITE_URL is missing protocol:", siteUrl);
+    return { message: "Server configuration error. Please contact support." };
+  }
 
   // signInWithOtp sends a magic link email — no password needed.
   // emailRedirectTo tells Supabase where to send the user after they click the link.
