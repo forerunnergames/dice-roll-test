@@ -26,16 +26,17 @@ export async function login(
   // which would let an attacker send magic links pointing to their own domain.
   //
   // Precedence:
-  // 1. SITE_URL — explicit override, set in Vercel dashboard (must include protocol)
-  // 2. VERCEL_PROJECT_PRODUCTION_URL — Vercel system var (production domain, no protocol)
-  // 3. VERCEL_URL — Vercel system var (current deployment URL, no protocol)
-  // 4. localhost fallback for local dev
-  const siteUrl = process.env.SITE_URL
-    || (process.env.VERCEL_PROJECT_PRODUCTION_URL
-      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-      : process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : "http://localhost:3000");
+  // 1. Production: SITE_URL (custom domain), falls back to VERCEL_URL
+  // 2. Preview: VERCEL_URL (deployment-specific preview URL)
+  // 3. Local dev: localhost fallback
+  //
+  // VERCEL_ENV distinguishes production from preview. On production, SITE_URL
+  // takes priority so custom domains (e.g., dailyroll.com) work correctly.
+  // On preview, VERCEL_URL is used so magic links redirect to the preview
+  // deployment, not production.
+  const siteUrl = process.env.VERCEL_ENV === "production"
+    ? (process.env.SITE_URL || `https://${process.env.VERCEL_URL}`)
+    : process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
 
   // Catch misconfigured SITE_URL (e.g., missing protocol) before sending to Supabase.
   if (!siteUrl.startsWith("http://") && !siteUrl.startsWith("https://")) {

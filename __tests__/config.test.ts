@@ -5,26 +5,26 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 // cache between tests that need different values.
 
 describe("isRollWindowOpen", () => {
-  // Default ROLL_WINDOW_CLOSE_HOUR is 21 (from env or fallback).
+  // Default ROLL_WINDOW_CLOSE_HOUR is 7 (from env or fallback).
   it("returns true before close hour", async () => {
     const { isRollWindowOpen } = await import("@/lib/config");
-    // 8 AM UTC — well before 9 PM UTC close.
-    const morning = new Date("2026-04-20T08:00:00Z");
-    expect(isRollWindowOpen(morning)).toBe(true);
+    // 3 AM UTC — before 7 AM UTC close.
+    const earlyMorning = new Date("2026-04-20T03:00:00Z");
+    expect(isRollWindowOpen(earlyMorning)).toBe(true);
   });
 
   it("returns false at exactly close hour", async () => {
     const { isRollWindowOpen } = await import("@/lib/config");
-    // 9 PM UTC — window is closed.
-    const closeTime = new Date("2026-04-20T21:00:00Z");
+    // 7 AM UTC — window is closed.
+    const closeTime = new Date("2026-04-20T07:00:00Z");
     expect(isRollWindowOpen(closeTime)).toBe(false);
   });
 
   it("returns false after close hour", async () => {
     const { isRollWindowOpen } = await import("@/lib/config");
-    // 11 PM UTC — after close.
-    const lateNight = new Date("2026-04-20T23:00:00Z");
-    expect(isRollWindowOpen(lateNight)).toBe(false);
+    // 10 AM UTC — after close.
+    const afterClose = new Date("2026-04-20T10:00:00Z");
+    expect(isRollWindowOpen(afterClose)).toBe(false);
   });
 
   it("returns true at midnight UTC (start of new window)", async () => {
@@ -35,8 +35,8 @@ describe("isRollWindowOpen", () => {
 
   it("returns true one minute before close", async () => {
     const { isRollWindowOpen } = await import("@/lib/config");
-    // 8:59 PM UTC — still open (getUTCHours() returns 20).
-    const justBefore = new Date("2026-04-20T20:59:59Z");
+    // 6:59 AM UTC — still open (getUTCHours() returns 6).
+    const justBefore = new Date("2026-04-20T06:59:59Z");
     expect(isRollWindowOpen(justBefore)).toBe(true);
   });
 });
@@ -75,10 +75,10 @@ describe("ROLL_WINDOW_CLOSE_HOUR validation", () => {
     delete process.env.ROLL_WINDOW_CLOSE_HOUR;
   });
 
-  it("defaults to 21 when env var is not set", async () => {
+  it("defaults to 7 when env var is not set", async () => {
     delete process.env.ROLL_WINDOW_CLOSE_HOUR;
     const { ROLL_WINDOW_CLOSE_HOUR } = await import("@/lib/config");
-    expect(ROLL_WINDOW_CLOSE_HOUR).toBe(21);
+    expect(ROLL_WINDOW_CLOSE_HOUR).toBe(7);
   });
 
   it("uses the env var when it's a valid hour", async () => {
@@ -87,34 +87,34 @@ describe("ROLL_WINDOW_CLOSE_HOUR validation", () => {
     expect(ROLL_WINDOW_CLOSE_HOUR).toBe(18);
   });
 
-  it("falls back to 21 for empty string", async () => {
+  it("falls back to 7 for empty string", async () => {
     process.env.ROLL_WINDOW_CLOSE_HOUR = "";
     const { ROLL_WINDOW_CLOSE_HOUR } = await import("@/lib/config");
-    expect(ROLL_WINDOW_CLOSE_HOUR).toBe(21);
+    expect(ROLL_WINDOW_CLOSE_HOUR).toBe(7);
   });
 
-  it("falls back to 21 for whitespace-only string", async () => {
+  it("falls back to 7 for whitespace-only string", async () => {
     process.env.ROLL_WINDOW_CLOSE_HOUR = "  ";
     const { ROLL_WINDOW_CLOSE_HOUR } = await import("@/lib/config");
-    expect(ROLL_WINDOW_CLOSE_HOUR).toBe(21);
+    expect(ROLL_WINDOW_CLOSE_HOUR).toBe(7);
   });
 
-  it("falls back to 21 for non-numeric values", async () => {
+  it("falls back to 7 for non-numeric values", async () => {
     process.env.ROLL_WINDOW_CLOSE_HOUR = "banana";
     const { ROLL_WINDOW_CLOSE_HOUR } = await import("@/lib/config");
-    expect(ROLL_WINDOW_CLOSE_HOUR).toBe(21);
+    expect(ROLL_WINDOW_CLOSE_HOUR).toBe(7);
   });
 
-  it("falls back to 21 for out-of-range values", async () => {
+  it("falls back to 7 for out-of-range values", async () => {
     process.env.ROLL_WINDOW_CLOSE_HOUR = "25";
     const { ROLL_WINDOW_CLOSE_HOUR } = await import("@/lib/config");
-    expect(ROLL_WINDOW_CLOSE_HOUR).toBe(21);
+    expect(ROLL_WINDOW_CLOSE_HOUR).toBe(7);
   });
 
-  it("falls back to 21 for negative values", async () => {
+  it("falls back to 7 for negative values", async () => {
     process.env.ROLL_WINDOW_CLOSE_HOUR = "-1";
     const { ROLL_WINDOW_CLOSE_HOUR } = await import("@/lib/config");
-    expect(ROLL_WINDOW_CLOSE_HOUR).toBe(21);
+    expect(ROLL_WINDOW_CLOSE_HOUR).toBe(7);
   });
 
   it("accepts 0 (midnight) as a valid close hour", async () => {

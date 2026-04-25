@@ -14,12 +14,12 @@ cp .env.example .env.local
 
 Fill in the values:
 
-| Variable | Where to get it |
-|----------|----------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase Dashboard > Project Settings > API > Project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Dashboard > Project Settings > API > Project API keys > `anon` `public` |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase Dashboard > Project Settings > API > Project API keys > `service_role` `secret` |
-| `ROLL_WINDOW_CLOSE_HOUR` | The UTC hour (0-23) when the daily roll window closes. Defaults to `21` (9pm UTC). |
+| Variable | Where to get it                                                                                                                                                                |
+|----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase Dashboard > Project Settings > API > Project URL                                                                                                                      |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Dashboard > Project Settings > API > Project API keys > `anon` `public`                                                                                               |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase Dashboard > Project Settings > API > Project API keys > `service_role` `secret`                                                                                       |
+| `ROLL_WINDOW_CLOSE_HOUR` | The UTC hour (0-23) when the daily roll window closes. Defaults to `7` (7 am UTC / 12 am PDT).                                                                                 |
 | `CRON_SECRET` | A random secret string you generate (e.g. `openssl rand -hex 32`). Used to authenticate the daily cron job endpoint. Must match the value set in Vercel environment variables. |
 
 The `NEXT_PUBLIC_` prefixed variables are exposed to the browser — this is intentional and safe. The anon key is designed to be public; it only grants access allowed by your Row Level Security policies. The `SUPABASE_SERVICE_ROLE_KEY` is **never** exposed to the browser and bypasses RLS — keep it secret.

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Playfair_Display } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -25,7 +27,9 @@ export default function RootLayout({
       className={`${playfair.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <Header />
         {children}
+        <Footer />
         <SpeedInsights />
         <Analytics />
       </body>
